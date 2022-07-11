@@ -1,0 +1,73 @@
+#! /usr/bin/Rscript --no-init-file
+# tmux
+# ./gmover.R
+library(googledrive)
+library(foreach)
+library(iterators)
+library(httr)
+
+root   = "/mnt/n/Documents"
+indirs = dir(root, "MODIS_", full.names = TRUE)
+# indirs = "/mnt/n/MODIS/Terra_Emiss/NA"
+outdir = "/mnt/n/MODIS/Terra_Albedo"
+
+list_files <- function(dirs, pattern = "*.tif") {
+    foreach(indir = dirs, i = icount(), .combine = c) %do% {
+        dir(indir, pattern, full.names = TRUE)
+    }
+}
+
+get_Year <- function(files) {
+    stringr::str_extract(basename(files), "(?<=_)\\d{4}")
+}
+
+check_dir <- function(path) {
+    foreach(path_i = unique(path)) %do% {
+        if (!dir.exists(path_i)) {
+            dir.create(path_i, recursive = TRUE)
+        }
+    }
+    path
+}
+
+empty_trash <- function() {
+    info = httr::with_config(config = timeout(10), {
+        drive_empty_trash()
+        drive_about()$storageQuota
+    })
+    # drive_empty_trash()
+    # get_used()
+    used = as.numeric(info$usage) / 1024^3
+    cat(sprintf("[info] used: %.2f Gb\n", used))    
+}
+
+fprintf <- function(...) cat(sprintf(...))
+
+i = 0
+mover <- function(indirs, outdir) {
+    time = format(Sys.time())
+    cat(sprintf("[%02d] %s\n", i, time))
+    
+    files_in = list_files(indirs)
+    if (length(files_in) > 0) {
+        year = get_Year(files_in)
+        files_out = paste0(outdir, "/", year, "/", basename(files_in))
+        check_dir(dirname(files_out))
+        # print(files_out)
+        status = file.rename(files_in, files_out)
+        fprintf("moved %d files, %d success, %d failed.\n", length(status), sum(status), sum(!status))
+        empty_trash()
+    }
+    if (i %% 5 == 0) empty_trash()
+    i <<- i + 1
+    invisible()
+}
+
+while(1) {
+    tryCatch({
+        mover(indirs, outdir)
+    }, error = function(e) {
+        message(sprintf('[e]: %s', e$message))
+    })
+    Sys.sleep(20)
+}

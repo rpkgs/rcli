@@ -1,0 +1,8 @@
+#! /bin/bash
+
+# sudo apt install progress rsync
+
+# https://askubuntu.com/questions/17275/how-to-show-the-transfer-progress-and-speed-when-copying-files-with-cp
+cp $@ & progress -mp $!
+
+# rsync -ah --progress source destination

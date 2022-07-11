@@ -1,0 +1,4 @@
+#! /bin/bash
+
+root=$(dirname `which $0`)
+$root/cmd start $@
