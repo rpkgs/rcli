@@ -8,51 +8,60 @@
     # -f FILE --file=FILE  input CSV or RDS filename. If reading from stdin, assumes CSV [default: stdin]
     # -c --csv             write output to stdout in CSV format (instead of default RDS file)
     # -v --verbose         be verbose"
-    # dt_merge <pattern> [options] 
 
-'dt_merge
+'dtplyr
 
 Usage: 
-    dt_merge --files FILES... [options]
-    dt_merge [options]
-    dt_merge (-h | --help)
+    dtplyr --files FILES...
+    dtplyt args...
+    dtplyr [options] 
+    dtplyr <command> [<expression>] [options] 
+    dtplyr (-h | --help)
 
 Examples:
-    "dt_merge cyl"
+    dtplyr cyl
 
 Options:
+    --debug                 debug? 
     -h --help               show help document
-    FILES                   csv file lists, (default NULL)
-    -i --indir DIR          specify output file [default: .]
-    -p --pattern PATTERN    repr pattern for csv files [default: *.csv]
-    -o --outfile ofile      specify output file [default: ./out.csv]
+    -i --infile FILE        cvs file path; If reading from stdin, assumes CSV [default: out.csv]
+    -o --outfile ofile      specify output file [default: out.csv]
+    --command CMD           operation, e.g. `select`, `mutate`, `filter` [default: filter]
     -q --quit               quit pipe? (default false)
     -v --verbose            whether print comamnd?
 ' -> doc
-
 
 suppressMessages({
   library(purrr)
   library(docopt)
   library(data.table)
-  library(colorout)
+  library(dplyr)
+  # library(colorout)
   library(magrittr)
   library(crayon)
 })
-ok <- function(fmt, ...) cat(green(sprintf(fmt, ...)), sep = "\n")
+
+print2 <- function(...) try(print(...), silent = TRUE)
+sprintf2 <- function(...) try(sprintf(...), silent = TRUE)
+
+fprintf <- function(fmt, ...) cat(sprintf2(fmt, ...))
+ok <- function(fmt, ...) cat(green(sprintf2(fmt, ...)), sep = "\n")
+warn <- function(fmt, ...) cat(red(sprintf2(fmt, ...)), sep = "\n")
 
 opt <- docopt(doc, version = 'hello.R')
 # set default
 opt$pattern %<>% `%||%`("*.csv")
+opt$command %<>% `%||%`("filter")
+opt$expression %<>% `%||%`("")
+
 
 # if (opt$verbose) 
-print(opt)
+if (opt$debug) print(opt)
 
 ## HELPER functions -----------------------------------------------------------
-fprintf <- function (fmt, ...) cat(sprintf(fmt, ...))
 
 get_files <- function(files=NULL, pattern="*.csv", indir=".") {
-  if (is.null(files) || length(files) == 0) {
+  if (is.null(files)) {
     indir2 = dirname(pattern)
     indir = ifelse(indir != ".", indir2, indir)  
     files = dir(indir, basename(pattern))
@@ -83,15 +92,32 @@ fread2 <- function(files, outfile=NULL, fun = fread, ...) {
   df
 }
 
-## PARAMETER PROCESS
-files = with(opt, get_files(FILES, pattern, indir))
-
-if (opt$verbose) {
-  print(files)
-} else {
-  data = fread2(files, opt$outfile)
-  print(data)
+run <- function(cmd) {
+  if (opt$verbose) print(cmd) else eval(parse(text = cmd))
 }
+
+log <- function() {
+  if (!is.null(opt$outfile)) {
+    ok("[write]: to %s", opt$outfile)
+    fwrite(data, opt$outfile)
+  }
+}
+
+## PARAMETER PROCESS
+# files = with(opt, get_files(files, pattern, indir))
+
+# if (opt$verbose) {
+#   print(files)
+# } else {
+  data = fread2(opt$infile)
+
+  if (!is.null(opt$command)) {
+    sprintf("data <<- data %%>%% %s(%s)", opt$command, opt$expression) %>% run()
+  }
+
+  print2(data)
+  log()
+# }
 
 # input = opt$file
 # print(input)
