@@ -5,8 +5,6 @@ rcli=\"`pwd`\"
 rcli=\"\$rcli/bin:\$rcli/linux:\$rcli/tidyverse\"
 export PATH=\"\$rcli:\$PATH\""
 
-echo $cmd >> ~/.zshrc
-
 # echo $cmd >> "~.bashrc"
-# echo $cmd >> ~/.zshrc
+echo $cmd >> ~/.zshrc
 # echo $cmd >> a.txt

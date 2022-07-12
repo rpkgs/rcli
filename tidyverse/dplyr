@@ -48,6 +48,9 @@ Options:
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 opt <- docopt(doc)
 
+# args <- docopt(doc, version = "hello.R")
+print(opt)
+
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # Helper function to reading data from a file based upon its extension
@@ -142,6 +145,7 @@ if (opt$command == 'kable') {
 } else if (opt$csv) {
     if (opt$verbose) message(">>>> output CSV to stdout")
     write.csv(res, row.names = FALSE)
+    fwrite(res, opt$csv)
 } else {
     # Explicitly set a known, unchanging tempdir.
     # A temporary directory created via 'tempdir()' is valid only for the

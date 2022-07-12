@@ -1,0 +1,109 @@
+#!/usr/bin/env Rscript
+
+
+  # merge_csv ship <name> move <x> <y> [--speed=<kn>]
+  # merge_csv ship shoot <x> <y>
+  # merge_csv mine (set|remove) <x> <y> [--moored | --drifting]
+  # merge_csv (-d | --indir) <indir>
+
+    # -f FILE --file=FILE  input CSV or RDS filename. If reading from stdin, assumes CSV [default: stdin]
+    # -c --csv             write output to stdout in CSV format (instead of default RDS file)
+    # -v --verbose         be verbose"
+
+'dt_merge
+
+Usage: 
+    dt_merge --files FILES...
+    dt_merge [options] 
+    dt_merge <pattern> [options] 
+    dt_merge (-h | --help)
+
+Options:
+    -h --help               show help document
+    -f --file FILE          cvs file path []; If reading from stdin, assumes CSV [default: stdin]
+    -i --indir DIR          specify output file [default: .]
+    -p --pattern PATTERN    repr pattern for csv files [default: *.csv]
+    -o --outfile ofile      specify output file [default: ./out.csv]
+    -q --quit               quit pipe? (default false)
+    -v --verbose            whether print comamnd?
+    --files FILES...        csv file lists, (default NULL)
+' -> doc
+
+suppressMessages({
+  library(purrr)
+  library(docopt)
+  library(data.table)
+  library(colorout)
+  library(magrittr)
+})
+
+opt <- docopt(doc, version = 'hello.R')
+# set default
+opt$pattern %<>% `%||%`("*.csv")
+
+# if (opt$verbose) 
+print(opt)
+
+# ## HELPER functions -----------------------------------------------------------
+# get_files <- function(files=NULL, pattern="*.csv", indir=".") {
+#   if (is.null(files)) {
+#     indir2 = dirname(pattern)
+#     indir = ifelse(indir != ".", indir2, indir)  
+#     files = dir(indir, basename(pattern))
+#   }
+#   files # return
+# }
+
+# read_data <- function(input) {
+#   if (!file.exists(input)) {
+#     stop("[input]: not found: ", input)
+#   }
+#   ext <- tolower(tools::file_ext(input))
+#   switch(ext,
+#     # csv = readr::read_csv(input, col_types = readr::cols()),
+#     csv = fread(input),
+#     rds = readRDS(input),
+#     stop("Unknown file extension: ", ext)
+#   )
+# }
+
+# fread2 <- function(files, outfile=NULL, fun = fread, ...) {
+#   lst = purrr::map(files, fun, ...)
+#   df = do.call(rbind, lst)
+#   if (!is.null(outfile)) fwrite(df, outfile)
+#   df
+# }
+
+
+# "%||%" <- function(x, y) {
+#   if (is.null(x)) {
+#     y
+#   } else {
+#     x
+#   }
+# }
+
+# ## PARAMETER PROCESS
+
+# files = with(opt, get_files(files, pattern, indir))
+
+# if (opt$verbose) {
+#   print(files)
+# } else {
+#   data = fread2(files, opt$outfile)
+#   print(data)
+# }
+
+# # input = opt$file
+# # print(input)
+
+# # if (input == "stdin") {
+# #   if (opt$verbose) message("[input] reading CSV from stdin")
+# #   input <- readLines(input) |> trimws()
+# #   .data <- readr::read_csv(I(input), col_types = readr::cols())
+# # } else {
+# #   if (opt$verbose) message("[input] looks like an existing file: ", input)
+# #   .data <- read_data(input)
+# # }
+# # print(.data)
+
