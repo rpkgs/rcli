@@ -45,8 +45,8 @@ fprintf <- function (fmt, ...) cat(sprintf(fmt, ...))
 get_files <- function(files=NULL, pattern="*.csv", indir=".") {
   if (is.null(files) || length(files) == 0) {
     indir2 = dirname(pattern)
-    indir = ifelse(indir != ".", indir2, indir)  
-    files = dir(indir, basename(pattern))
+    indir = ifelse(indir == ".", indir2, indir)  
+    files = dir(indir, basename(pattern), full.names = TRUE)
   }
   files # return
 }
@@ -65,8 +65,8 @@ read_data <- function(input) {
 }
 
 fread2 <- function(files, outfile=NULL, fun = fread, ...) {
-  lst = purrr::map(files, fun, ...)
-  df = do.call(rbind, lst)
+  lst = plyr::llply(files, fun, ..., .progress = "text")
+  df = do.call(rbind, lst) %>% unique()
   if (!is.null(outfile)) {
     ok("[write]: to %s", outfile)
     fwrite(df, outfile)
