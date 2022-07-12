@@ -1,14 +1,6 @@
 #!/usr/bin/env Rscript
 
-  # merge_csv ship <name> move <x> <y> [--speed=<kn>]
-  # merge_csv ship shoot <x> <y>
-  # merge_csv mine (set|remove) <x> <y> [--moored | --drifting]
-  # merge_csv (-d | --indir) <indir>
-
-    # -f FILE --file=FILE  input CSV or RDS filename. If reading from stdin, assumes CSV [default: stdin]
-    # -c --csv             write output to stdout in CSV format (instead of default RDS file)
-    # -v --verbose         be verbose"
-    # dt_merge <pattern> [options] 
+# dt_merge <pattern> [options] 
 
 'dt_merge
 
@@ -35,7 +27,6 @@ suppressMessages({
   library(purrr)
   library(docopt)
   library(data.table)
-  library(colorout)
   library(magrittr)
   library(crayon)
 })

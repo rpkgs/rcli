@@ -1,0 +1,78 @@
+#!/usr/bin/env Rscript
+
+'sp_interp
+
+Usage: 
+    sp_interp -f infile -s station -m method
+    sp_interp [options] [--range RANGE] [--res RES]
+    sp_interp <infile> <station> <method>
+    sp_interp (-h | --help)
+
+Options:  
+    -h --help              show help document
+    -f --infile DATA       specify output file
+    -o --outfile OFILE     outfile of interpolated raster [default: out.nc]
+    --name varnames        variable names separated by comma [default: x]
+    -s --station STATION   repr pattern for csv files
+    -m --method METHOD     specify output file [default: adw]
+
+    --range RANGE          [xmin, xmax, ymin, ymax] [default: 70,140,15,55]
+    --res RESOLUTION       [default: 0.5]
+    -v --verbose           whether print comamnd?
+' -> doc
+
+suppressMessages({
+  library(purrr)
+  library(docopt)
+  library(crayon)
+  library(magrittr)
+
+  library(data.table)
+  library(spInterp)
+})
+
+str_split <- function(x, sep=",") strsplit(x, sep)[[1]]
+parse_range <- function(x) {
+  str_split(x) |> sapply(trimws) |> as.numeric()
+}
+parse_res <- . %>% as.numeric()
+
+ok <- function(fmt, ...) cat(green(sprintf(fmt, ...)), sep = "\n")
+
+# if multiple files exists, call dt_merge first
+opt <- docopt(doc, version = 'hello.R')
+# set default
+opt$method %<>% `%||%`("adw")
+opt$name %<>% str_split()
+opt$range %<>% parse_range()
+opt$res %<>% parse_res()
+
+# if (opt$verbose) 
+opt_main = opt %>% .[!grepl("--|<", names(opt))]
+print(str(opt_main))
+# print(opt)
+
+## MAIN SCRIPTS ---------------------------------------------------------------
+
+if (0) {
+  data(TempBrazil) # Temperature for some poins of Brazil
+  range <- c(-78, -34, -36, 5)
+  res <- 1
+
+  loc <- TempBrazil[, 1:2] %>% set_names(c("lon", "lat"))
+  dat <- TempBrazil[, 3] %>% as.matrix() %>% cbind(., .) # Vector with observations in points
+
+  t = system.time({
+    l <- spInterp_adw(loc, dat, range, res = res, cdd = 450)
+  })
+  print(t)
+
+  df = cbind(l$coord, l$predicted)
+
+  library(terra)
+  ra = rast(df, type = "xyz")
+  plot(ra)
+  # guess date info
+  # save into nc file
+  writeCDF(ra, "a.nc", "x", overwrite = TRUE)
+}
